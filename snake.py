@@ -1,5 +1,5 @@
 # Built by BytexLabs — https://www.youtube.com/@bytexlabs
-https://github.com/anmolbohara0/Snake-Game-Python/tree/main
+# Github Repository https://github.com/anmolbohara0/Snake-Game-Python/tree/main
 # DO NOT DARE COPY AND REPOST THIS!
 import tkinter as tk
 import random
