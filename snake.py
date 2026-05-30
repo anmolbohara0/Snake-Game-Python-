@@ -1,218 +1,182 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[codz]
-*$py.class
+# Built by BytexLabs — https://www.youtube.com/@bytexlabs
+# Project repository: https://github.com/BytexLabs/snake-game-tkinter
+# DO NOT DARE COPY AND REPOST THIS!
+import tkinter as tk
+import random
 
-# C extensions
-*.so
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+class SnakeGame:
+    WINDOW_WIDTH = 700
+    WINDOW_HEIGHT = 500
+    CELL_SIZE = 20
+    GAME_SPEED = 90
 
-# PyInstaller
-#   Usually these files are written by a python script from a template
-#   before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
+    BG_COLOR = "#111111"
+    SNAKE_COLOR = "#00ff88"
+    FOOD_COLOR = "#ff3b3b"
+    TEXT_COLOR = "#ffffff"
+    SCORE_COLOR = "#ffd700"
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Snake Game")
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py.cover
-.hypothesis/
-.pytest_cache/
-cover/
+        self.canvas = tk.Canvas(
+            root,
+            width=self.WINDOW_WIDTH,
+            height=self.WINDOW_HEIGHT,
+            bg=self.BG_COLOR,
+            highlightthickness=0
+        )
+        self.canvas.pack()
 
-# Translations
-*.mo
-*.pot
+        self.high_score = 0
+        self.restart_button = None
 
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
+        self.root.bind("<Up>", lambda e: self.change_direction("UP"))
+        self.root.bind("<Down>", lambda e: self.change_direction("DOWN"))
+        self.root.bind("<Left>", lambda e: self.change_direction("LEFT"))
+        self.root.bind("<Right>", lambda e: self.change_direction("RIGHT"))
 
-# Flask stuff:
-instance/
-.webassets-cache
+        self.start_game()
 
-# Scrapy stuff:
-.scrapy
+    def start_game(self):
+        if self.restart_button:
+            self.restart_button.destroy()
 
-# Sphinx documentation
-docs/_build/
+        self.score = 0
+        self.direction = "RIGHT"
 
-# PyBuilder
-.pybuilder/
-target/
+        self.snake = [
+            (100, 100),
+            (80, 100),
+            (60, 100)
+        ]
 
-# Jupyter Notebook
-.ipynb_checkpoints
+        self.spawn_food()
+        self.update()
 
-# IPython
-profile_default/
-ipython_config.py
+    def spawn_food(self):
+        x = random.randint(0, (self.WINDOW_WIDTH // self.CELL_SIZE) - 1) * self.CELL_SIZE
+        y = random.randint(0, (self.WINDOW_HEIGHT // self.CELL_SIZE) - 1) * self.CELL_SIZE
+        self.food = (x, y)
 
-# pyenv
-#   For a library or package, you might want to ignore these files since the code is
-#   intended to run in multiple environments; otherwise, check them in:
-# .python-version
+    def draw(self):
+        self.canvas.delete("all")
 
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-# Pipfile.lock
+        for x, y in self.snake:
+            self.canvas.create_rectangle(
+                x, y,
+                x + self.CELL_SIZE,
+                y + self.CELL_SIZE,
+                fill=self.SNAKE_COLOR,
+                outline=""
+            )
 
-# UV
-#   Similar to Pipfile.lock, it is generally recommended to include uv.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-# uv.lock
+        fx, fy = self.food
+        self.canvas.create_oval(
+            fx, fy,
+            fx + self.CELL_SIZE,
+            fy + self.CELL_SIZE,
+            fill=self.FOOD_COLOR,
+            outline=""
+        )
 
-# poetry
-#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
-# poetry.lock
-# poetry.toml
+        self.canvas.create_text(
+            90, 25,
+            text=f"Score: {self.score}",
+            fill=self.TEXT_COLOR,
+            font=("Segoe UI", 14, "bold")
+        )
 
-# pdm
-#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
-#   pdm recommends including project-wide configuration in pdm.toml, but excluding .pdm-python.
-#   https://pdm-project.org/en/latest/usage/project/#working-with-version-control
-# pdm.lock
-# pdm.toml
-.pdm-python
-.pdm-build/
+        self.canvas.create_text(
+            250, 25,
+            text=f"Best: {self.high_score}",
+            fill=self.SCORE_COLOR,
+            font=("Segoe UI", 14, "bold")
+        )
 
-# pixi
-#   Similar to Pipfile.lock, it is generally recommended to include pixi.lock in version control.
-# pixi.lock
-#   Pixi creates a virtual environment in the .pixi directory, just like venv module creates one
-#   in the .venv directory. It is recommended not to include this directory in version control.
-.pixi
+    def update(self):
+        head_x, head_y = self.snake[0]
 
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
-__pypackages__/
+        movement = {
+            "UP": (0, -self.CELL_SIZE),
+            "DOWN": (0, self.CELL_SIZE),
+            "LEFT": (-self.CELL_SIZE, 0),
+            "RIGHT": (self.CELL_SIZE, 0)
+        }
 
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
+        dx, dy = movement[self.direction]
+        new_head = (head_x + dx, head_y + dy)
 
-# Redis
-*.rdb
-*.aof
-*.pid
+        if self.check_collision(new_head):
+            self.game_over()
+            return
 
-# RabbitMQ
-mnesia/
-rabbitmq/
-rabbitmq-data/
+        self.snake.insert(0, new_head)
 
-# ActiveMQ
-activemq-data/
+        if new_head == self.food:
+            self.score += 1
+            self.spawn_food()
+        else:
+            self.snake.pop()
 
-# SageMath parsed files
-*.sage.py
+        self.draw()
+        self.root.after(self.GAME_SPEED, self.update)
 
-# Environments
-.env
-.envrc
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+    def check_collision(self, position):
+        x, y = position
 
-# Spyder project settings
-.spyderproject
-.spyproject
+        return (
+            x < 0 or x >= self.WINDOW_WIDTH or
+            y < 0 or y >= self.WINDOW_HEIGHT or
+            position in self.snake
+        )
 
-# Rope project settings
-.ropeproject
+    def change_direction(self, new_direction):
+        opposites = {
+            "UP": "DOWN",
+            "DOWN": "UP",
+            "LEFT": "RIGHT",
+            "RIGHT": "LEFT"
+        }
 
-# mkdocs documentation
-/site
+        if opposites[new_direction] != self.direction:
+            self.direction = new_direction
 
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
+    def game_over(self):
+        self.high_score = max(self.high_score, self.score)
 
-# Pyre type checker
-.pyre/
+        self.canvas.delete("all")
 
-# pytype static type analyzer
-.pytype/
+        self.canvas.create_text(
+            self.WINDOW_WIDTH / 2,
+            self.WINDOW_HEIGHT / 2 - 40,
+            text="GAME OVER",
+            fill=self.FOOD_COLOR,
+            font=("Segoe UI", 30, "bold")
+        )
 
-# Cython debug symbols
-cython_debug/
+        self.canvas.create_text(
+            self.WINDOW_WIDTH / 2,
+            self.WINDOW_HEIGHT / 2 + 10,
+            text=f"Score: {self.score}   |   Best: {self.high_score}",
+            fill=self.TEXT_COLOR,
+            font=("Segoe UI", 16)
+        )
 
-# PyCharm
-#   JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#   be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#   and can be added to the global gitignore or merged into this file.  For a more nuclear
-#   option (not recommended) you can uncomment the following to ignore the entire idea folder.
-# .idea/
+        self.restart_button = tk.Button(
+            self.root,
+            text="Play Again",
+            command=self.start_game,
+            font=("Segoe UI", 12, "bold"),
+            padx=15,
+            pady=5
+        )
+        self.restart_button.pack(pady=15)
 
-# Abstra
-#   Abstra is an AI-powered process automation framework.
-#   Ignore directories containing user credentials, local state, and settings.
-#   Learn more at https://abstra.io/docs
-.abstra/
 
-# Visual Studio Code
-#   Visual Studio Code specific template is maintained in a separate VisualStudioCode.gitignore 
-#   that can be found at https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore
-#   and can be added to the global gitignore or merged into this file. However, if you prefer, 
-#   you could uncomment the following to ignore the entire vscode folder
-# .vscode/
-# Temporary file for partial code execution
-tempCodeRunnerFile.py
-
-# Ruff stuff:
-.ruff_cache/
-
-# PyPI configuration file
-.pypirc
-
-# Marimo
-marimo/_static/
-marimo/_lsp/
-__marimo__/
-
-# Streamlit
-.streamlit/secrets.toml
+if __name__ == "__main__":
+    root = tk.Tk()
+    game = SnakeGame(root)
+    root.mainloop()
